@@ -43,8 +43,19 @@ declare module 'libsession_util_nodejs' {
     rotatingPrivKeyHex: string;
   };
 
+  type WithRotatingSeedHex = {
+    /**
+     * 32 bytes, 64 chars
+     */
+    rotatingPrivKeyHex: string;
+  };
+
   type ProConfig = WithRotatingPrivKeyHex & {
     proProof: ProProof;
+  };
+
+  type ProConfigSet = WithRotatingSeedHex & {
+    proProof: Omit<ProProof, 'rotatingPubkeyHex'>;
   };
 
   export type ProOriginatingPlatform = 'Nil' | 'Google' | 'iOS';

@@ -1,14 +1,13 @@
 .circleci export-ignore
 .github export-ignore
-libsession-util/external/libsodium-internal/test export-ignore
-libsession-util/external/zstd/doc export-ignore
-libsession-util/external/zstd/tests export-ignore
-libsession-util/tests export-ignore
-libsession-util/external/nlohmann-json/tests export-ignore
-libsession-util/external/nlohmann-json/docs export-ignore
-libsession-util/external/oxen-encoding/tests export-ignore
-libsession-util/external/oxen-libquic/external/ngtcp2 export-ignore
-libsession-util/external/oxen-libquic/tests export-ignore
+**/test export-ignore
+**/tests export-ignore
+**/doc export-ignore
+**/docs export-ignore
+libsession-util/session-router/external/oxen-libquic/external/ngtcp2 export-ignore
+
+
+# protobuf
 libsession-util/external/protobuf/csharp export-ignore
 libsession-util/external/protobuf/java export-ignore
 libsession-util/external/protobuf/objectivec export-ignore
@@ -16,6 +15,3 @@ libsession-util/external/protobuf/php export-ignore
 libsession-util/external/protobuf/python export-ignore
 libsession-util/external/protobuf/ruby export-ignore
 libsession-util/external/protobuf/kokoro export-ignore
-libsession-util/external/oxen-libquic/external/oxen-logging/fmt/test export-ignore
-libsession-util/external/oxen-libquic/external/oxen-logging/spdlog/tests export-ignore
-libsession-util/external/oxen-libquic/external/oxen-encoding/tests export-ignore
