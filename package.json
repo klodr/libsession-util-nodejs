@@ -3,7 +3,7 @@
   "name": "libsession_util_nodejs",
   "packageManager": "pnpm@10.28.1",
   "description": "Wrappers for the Session Util Library",
-  "version": "0.6.12",
+  "version": "0.6.14",
   "license": "GPL-3.0",
   "author": {
     "name": "Oxen Project",
@@ -13,7 +13,7 @@
     "clean": "rimraf .cache build",
     "lint:cpp": "cppcheck --std=c++20 -j8  src",
     "lint": "find src include -name '*.cpp' -o -name '*.hpp' | xargs clang-format-19 -i",
-    "install": "cmake-js build --runtime=electron --runtime-version=40.0.0 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_ONIONREQ=OFF --CDWITH_TESTS=OFF",
+    "install": "cmake-js build --runtime=electron --runtime-version=40.0.0 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=OFF",
     "prepare_release": "sh prepare_release.sh",
     "dedup": "pnpm dedupe --check"
   },

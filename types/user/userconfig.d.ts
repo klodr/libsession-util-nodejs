@@ -38,7 +38,7 @@ declare module 'libsession_util_nodejs' {
      */
     getNoteToSelfExpiry: () => number | undefined;
 
-    setProConfig: (proConfig: ProConfig) => void;
+    setProConfig: (proConfig: ProConfigSet) => void;
     getProConfig: () => ProConfig | null;
     removeProConfig: () => boolean;
 

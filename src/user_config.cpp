@@ -17,14 +17,14 @@ using config::UserProfile;
 session::config::ProConfig pro_config_from_object(Napi::Object input) {
     session::config::ProConfig pro_config = {};
 
-    auto rotating_privkey_hex_js = input.Get("rotatingPrivKeyHex");
-    assertIsString(rotating_privkey_hex_js, "pro_config_from_object.rotating_privkey_js");
-    auto rotating_privkey_cpp = from_hex_to_vector(
-            toCppString(rotating_privkey_hex_js, "pro_config_from_object.rotating_privkey_js"));
-    assert_length(rotating_privkey_cpp, 64, "pro_config_from_object.rotating_privkey_js");
+    auto rotating_seed_hex_js = input.Get("rotatingSeedHex");
+    assertIsString(rotating_seed_hex_js, "pro_config_from_object.rotating_seed_js");
+    auto rotating_seed_cpp = from_hex_to_vector(
+            toCppString(rotating_seed_hex_js, "pro_config_from_object.rotating_seed_js"));
+    assert_length(rotating_seed_cpp, 32, "pro_config_from_object.rotating_seed_js");
     std::copy(
-            rotating_privkey_cpp.begin(),
-            rotating_privkey_cpp.end(),
+            rotating_seed_cpp.begin(),
+            rotating_seed_cpp.end(),
             pro_config.rotating_privkey.begin());
 
     auto proProof = input.Get("proProof");
@@ -45,18 +45,6 @@ session::config::ProConfig pro_config_from_object(Napi::Object input) {
             gen_index_hash_cpp.begin(),
             gen_index_hash_cpp.end(),
             pro_config.proof.gen_index_hash.begin());
-
-    // extract rotatingPubkeyHex
-    auto rotating_pubkey_hex_js = proof_js.Get("rotatingPubkeyHex");
-    assertIsString(rotating_pubkey_hex_js, "pro_config_from_object.rotatingPubkeyHex");
-    auto rotating_pubkey_hex_cpp =
-            toCppString(rotating_pubkey_hex_js, "pro_config_from_object.rotatingPubkeyHex");
-    auto rotating_pubkey_cpp = from_hex_to_vector(rotating_pubkey_hex_cpp);
-    assert_length(rotating_pubkey_cpp, 32, "pro_config_from_object.rotatingPubkeyHex");
-    std::copy(
-            rotating_pubkey_cpp.begin(),
-            rotating_pubkey_cpp.end(),
-            pro_config.proof.rotating_pubkey.begin());
 
     // extract backend signature
     auto signature_hex_js = proof_js.Get("signatureHex");
@@ -278,6 +266,10 @@ void UserConfigWrapper::setProConfig(const Napi::CallbackInfo& info) {
         auto pro_config_js = info[0];
         assertIsObject(pro_config_js);
 
+        // This is quite messed up, but the type expected by libsession is not correct here.
+        // It needs a seed in the rotatingPrivKey and will discard the rotatingPubkey in the
+        // proProof.
+        // When calling get_pro_config, it will deduce those two from the seed stored above.
         session::config::ProConfig pro_config =
                 pro_config_from_object(pro_config_js.As<Napi::Object>());
 
