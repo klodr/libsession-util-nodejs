@@ -47,7 +47,7 @@ declare module 'libsession_util_nodejs' {
     /**
      * 32 bytes, 64 chars
      */
-    rotatingPrivKeyHex: string;
+    rotatingSeedHex: string;
   };
 
   type ProConfig = WithRotatingPrivKeyHex & {
