@@ -24,62 +24,6 @@ std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_USER_PRO_STATUS v);
 std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_GET_PRO_DETAILS_ERROR_REPORT v);
 std::string_view proBackendEnumToString(session::ProFeaturesForMsgStatus v);
 
-template <typename T>
-Napi::Value toJsOrNullIfErrors(
-        const Napi::Env& env, const T& value, const std::vector<std::string>& errors) {
-    return errors.empty() ? toJs(env, value) : env.Null();
-}
-
-template <>
-struct toJs_impl<pro_backend::ProRevocationItem> {
-    auto operator()(const Napi::Env& env, pro_backend::ProRevocationItem i) const {
-
-        auto obj = Napi::Object::New(env);
-        obj["genIndexHashB64"] = toJs(env, to_base64(i.gen_index_hash));
-        obj["expiryUnixTsMs"] = toJs(env, i.expiry_unix_ts);
-
-        return obj;
-    }
-};
-
-template <>
-struct toJs_impl<pro_backend::ProPaymentItem> {
-    auto operator()(const Napi::Env& env, pro_backend::ProPaymentItem p) const {
-
-        auto obj = Napi::Object::New(env);
-        obj["status"] = toJs(env, proBackendEnumToString(p.status));
-        obj["plan"] = toJs(env, proBackendEnumToString(p.plan));
-        obj["paymentProvider"] = toJs(env, proBackendEnumToString(p.payment_provider));
-
-        obj["autoRenewing"] = toJs(env, p.auto_renewing);
-        obj["unredeemedTsMs"] = toJs(env, p.unredeemed_unix_ts);
-        obj["redeemedTsMs"] = toJs(env, p.redeemed_unix_ts);
-        obj["expiryTsMs"] = toJs(env, p.expiry_unix_ts);
-        obj["gracePeriodDurationMs"] = toJs(env, p.grace_period_duration_ms);
-        obj["platformRefundExpiryTsMs"] = toJs(env, p.platform_refund_expiry_unix_ts);
-        obj["revokedTsMs"] = toJs(env, p.revoked_unix_ts);
-
-        obj["googlePaymentToken"] = toJs(env, p.google_payment_token);
-        obj["appleOriginalTxId"] = toJs(env, p.apple_original_tx_id);
-        obj["appleTxId"] = toJs(env, p.apple_tx_id);
-        obj["appleWebLineOrderId"] = toJs(env, p.apple_web_line_order_id);
-
-        return obj;
-    }
-};
-
-template <>
-struct toJs_impl<pro_backend::ResponseHeader> {
-    auto operator()(const Napi::Env& env, pro_backend::ResponseHeader r) const {
-
-        auto obj = Napi::Object::New(env);
-        obj["status"] = toJs(env, r.status);
-        obj["errors"] = toJs(env, r.errors);
-
-        return obj;
-    }
-};
-
 class ProWrapper : public Napi::ObjectWrap<ProWrapper> {
 
   public:
