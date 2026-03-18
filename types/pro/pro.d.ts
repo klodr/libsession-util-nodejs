@@ -58,7 +58,7 @@ declare module 'libsession_util_nodejs' {
     proProof: Omit<ProProof, 'rotatingPubkeyHex'>;
   };
 
-  export type ProOriginatingPlatform = 'Nil' | 'Google' | 'iOS';
+  export type ProOriginatingPlatform = 'Nil' | 'Google' | 'iOS' | 'Rangeproof';
 
   export type ProBackendProviderConstantType = {
     device: string;
@@ -92,82 +92,6 @@ declare module 'libsession_util_nodejs' {
 
   type WithMasterPrivKeyHex = { masterPrivKeyHex: string };
 
-  type ProPaymentItem = {
-    /**
-     * Describes the current status of the consumption of the payment for Session Pro entitlement
-     * The status should be used to determine which timestamps should be used.
-
-     * For example, a payment can be in a redeemed state whilst also have a refunded timestamp set
-     * if the payment was refunded and then the refund was reversed. We preserve all timestamps for
-     * book-keeping purposes.
-     */
-    status: 'NIL' | 'UNREDEEMED' | 'REDEEMED' | 'EXPIRED' | 'REFUNDED';
-    /**
-     * Session Pro product/plan item that was purchased
-     */
-    plan: 'NIL' | 'ONE_MONTH' | 'THREE_MONTHS' | 'TWELVE_MONTHS';
-    /**
-     * Store front that this particular payment came from
-     */
-    paymentProvider: ProOriginatingPlatform;
-    /**
-     * Flag indicating whether or not this payment will automatically bill itself at the end of the
-     billing cycle.
-     */
-    autoRenewing: boolean;
-    /**
-     * Unix timestamp of when the payment was witnessed by the Pro Backend. Always set
-     */
-    unredeemedTsMs: number;
-    /**
-     * Unix timestamp of when the payment was redeemed. 0 if not activated
-     */
-    redeemedTsMs: number;
-    /**
-     * Unix timestamp of when the payment was expiry. 0 if not activated
-     */
-    expiryTsMs: number;
-    /**
-     * Duration of the grace period, e.g. when the payment provider will start to attempt to renew
-     * the Session Pro subscription. During the period between
-     * [expiry_unix_ts, expiry_unix_ts + grace_period_duration_ms] the user continues to have
-     * entitlement to Session Pro. This value is only applicable if `auto_renewing` is `true`.
-     */
-    gracePeriodDurationMs: number;
-    /**
-     *  Unix deadline timestamp of when the user is able to refund the subscription via the payment
-     provider.
-     * Thereafter the user must initiate a refund manually via Session support.
-     */
-    platformRefundExpiryTsMs: number;
-    /**
-     * Unix timestamp of when the payment was revoked or refunded. 0 if not applicable.
-     */
-    revokedTsMs: number;
-    /**
-     * When payment provider is set to Google Play Store, this is the platform-specific purchase
-     token.
-     * This information should be considered as confidential and stored appropriately.
-     */
-    googlePaymentToken: string | null;
-    /**
-     * When payment provider is set to iOS App Store, this is the platform-specific original
-     transaction ID.
-     * This information should be considered as confidential and stored appropriately.
-     */
-    appleOriginalTxId: string | null;
-    /**
-     * When payment provider is set to iOS App Store, this is the platform-specific transaction ID
-     * This information should be considered as confidential and stored appropriately.
-     */
-    appleTxId: string | null;
-    /**
-     * When payment provider is set to iOS App Store, this is the platform-specific web line order
-     *  ID.
-     * This information should be considered as confidential and stored appropriately.
-     */
-    appleWebLineOrderId: string | null;
-  };
 
   type ProWrapper = {
     proFeaturesForMessage: (args: { utf16: string }) => WithProMessageBitset & {
