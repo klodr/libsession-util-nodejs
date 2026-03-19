@@ -52,8 +52,8 @@ Napi::Object ConstantsWrapper::Init(Napi::Env env, Napi::Object exports) {
 
     auto pro_provider_rangeproof = make_provider(
             SESSION_PRO_BACKEND_PAYMENT_PROVIDER_RANGEPROOF,
-            // make nil as second provider here so that we default to whatever the session client is
-            // using
+            // Use NIL as the second provider for Rangeproof so that it does not define an alternate
+            // store label (i.e., no explicit "other" store for Rangeproof in these constants).
             SESSION_PRO_BACKEND_PAYMENT_PROVIDER_NIL);
 
     auto pro_providers = Napi::Object::New(env);
