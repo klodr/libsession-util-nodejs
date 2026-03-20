@@ -101,7 +101,7 @@ declare module 'libsession_util_nodejs' {
 
   type MakeGroupActionCall<A extends RecordOfFunctions, B extends keyof A> = [
     B,
-    ...Parameters<A[B]>
+    ...Parameters<A[B]>,
   ]; // all of the groupActionCalls need the pubkey of the group we are targeting
 
   type AsyncGroupWrapper<T extends (...args: any) => any> = (
@@ -178,7 +178,7 @@ declare module 'libsession_util_nodejs' {
     LIBSESSION_NODEJS_COMMIT: string;
     /** Object containing pro urls **/
     LIBSESSION_PRO_URLS: ProBackendUrlsType;
-    /** Object containing mapped provder constants */
+    /** Object containing mapped provider constants */
     LIBSESSION_PRO_PROVIDERS: ProBackendProviderConstantsType;
   };
 
