@@ -3,7 +3,7 @@
 /// <reference path="./groupinfo.d.ts" />
 /// <reference path="./groupkeys.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   export type ConfirmKeysPush = [data: Uint8Array, hash: string, timestampMs: number];
 
   export type GroupWrapperConstructor = {

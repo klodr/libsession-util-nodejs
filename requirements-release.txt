@@ -1,0 +1,4 @@
+# Pinned dependencies for prepare_release.sh.
+# Install with: pip install --require-hashes -r requirements-release.txt
+git-archive-all==1.23.1 \
+    --hash=sha256:a42fe0cedd2e0361250a4f3130f3d3543f640d4f1fe28530771df5972108729f

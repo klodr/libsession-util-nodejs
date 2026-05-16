@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: true
@@ -22,12 +25,11 @@ jobs:
         os: [windows-2022, macos-15-intel, macos-14, ubuntu-24.04]
     env:
       SIGNAL_ENV: production
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - run: git config --global core.autocrlf false
 
       - name: Checkout git repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           submodules: "recursive"
 
@@ -47,7 +49,7 @@ jobs:
         run: pnpm config set node-linker hoisted
 
       - name: Setup node.js
-        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version-file: ".nvmrc"
           cache: "pnpm"
@@ -58,17 +60,12 @@ jobs:
         run: sudo apt update && sudo apt search clang && sudo apt install clang-format-19
         shell: bash
 
-      - name: Install node
-        uses: actions/setup-node@v3
-        with:
-          node-version-file: ".nvmrc"
-
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.11"
 
       - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         if: runner.os == 'Windows'
 
       - name: build libsession-util-nodejs
@@ -85,6 +82,26 @@ jobs:
 
       - name: Ensure pnpm-lock.yaml has no duplicates
         run: pnpm dedupe --check
+
+      - name: R14 sentinel — ENABLE_NETWORKING must stay OFF
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # See docs/V2_PHASE1_FORK.md R14 in klodr/session-messenger.
+          # Flipping ENABLE_NETWORKING to ON would re-activate the
+          # build_external() path that downloads from oxen.rocks/deps
+          # for gmp/openssl/etc — a supply-chain surface this fork
+          # intentionally avoids. Any change here requires explicit
+          # crypto review and updating both the R14 section and this
+          # sentinel.
+          if ! grep -q '^set(ENABLE_NETWORKING OFF)' CMakeLists.txt; then
+            echo "::error file=CMakeLists.txt::ENABLE_NETWORKING is no longer pinned OFF (R14 sentinel)."
+            exit 1
+          fi
+          if ! grep -q -- '--CDENABLE_NETWORKING=OFF' package.json; then
+            echo "::error file=package.json::install script no longer passes --CDENABLE_NETWORKING=OFF (R14 sentinel)."
+            exit 1
+          fi
 
       - name: Validate formatting & linting changed no files
         run: git diff --exit-code
