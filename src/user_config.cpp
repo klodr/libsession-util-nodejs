@@ -191,13 +191,15 @@ void UserConfigWrapper::setNewProfilePic(const Napi::CallbackInfo& info) {
 }
 
 void UserConfigWrapper::setReuploadProfilePic(const Napi::CallbackInfo& info) {
-    assertInfoLength(info, 1);
-    auto profile_pic_obj = info[0];
+    wrapExceptions(info, [&] {
+        assertInfoLength(info, 1);
+        auto profile_pic_obj = info[0];
 
-    if (!profile_pic_obj.IsNull() && !profile_pic_obj.IsUndefined())
-        assertIsObject(profile_pic_obj);
+        if (!profile_pic_obj.IsNull() && !profile_pic_obj.IsUndefined())
+            assertIsObject(profile_pic_obj);
 
-    config.set_reupload_profile_pic(profile_pic_from_object(profile_pic_obj));
+        config.set_reupload_profile_pic(profile_pic_from_object(profile_pic_obj));
+    });
 }
 
 Napi::Value UserConfigWrapper::getProfileUpdatedSeconds(const Napi::CallbackInfo& info) {
