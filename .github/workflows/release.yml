@@ -1,0 +1,193 @@
+name: release prebuilds
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            platform: darwin
+            arch: arm64
+          - os: ubuntu-24.04
+            platform: linux
+            arch: x64
+    env:
+      SIGNAL_ENV: production
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: Install clang-format-19 (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y clang-format-19
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+      - name: Setup node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: ".nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "pnpm-lock.yaml"
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+
+      - name: Build native binding
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify .node artefact exists
+        shell: bash
+        run: |
+          test -f build/Release/libsession_util_nodejs.node
+          file build/Release/libsession_util_nodejs.node
+
+      - name: Stage prebuild artefact
+        shell: bash
+        run: |
+          PREBUILD_DIR="prebuilds/${{ matrix.platform }}-${{ matrix.arch }}"
+          mkdir -p "$PREBUILD_DIR"
+          cp build/Release/libsession_util_nodejs.node "$PREBUILD_DIR/"
+          ls -la "$PREBUILD_DIR"
+
+      - name: Upload prebuild artefact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: prebuild-${{ matrix.platform }}-${{ matrix.arch }}
+          path: prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/libsession_util_nodejs.node
+          if-no-files-found: error
+
+  package-source:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.11"
+
+      - name: Install pinned git-archive-all
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install --require-hashes -r requirements-release.txt
+
+      - name: Build source tarball
+        shell: bash
+        run: |
+          . .venv/bin/activate
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          GIT_COMMIT=$(git rev-parse HEAD)
+          # Replicate src/version.h generation from CMakeLists.txt so the
+          # version-mismatch guard in prepare_release.sh has stable inputs.
+          mkdir -p src
+          printf 'const char* LIBSESSION_NODEJS_VERSION = "%s";\nconst char* LIBSESSION_NODEJS_COMMIT = "%s";\n' \
+            "$PACKAGE_VERSION" "$GIT_COMMIT" > src/version.h
+          python3 build_release_archive.py \
+            "libsession_util_nodejs-v${PACKAGE_VERSION}.tar.gz" \
+            --include src/version.h
+          ls -la libsession_util_nodejs-v*.tar.gz
+
+      - name: Upload source tarball artefact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: source-tarball
+          path: libsession_util_nodejs-v*.tar.gz
+          if-no-files-found: error
+
+  publish-release:
+    runs-on: ubuntu-24.04
+    needs: [build, package-source]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download all artefacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4.1.8
+        with:
+          path: dist
+
+      - name: Rename prebuilds with platform suffix for release
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p release
+          for d in dist/prebuild-*/; do
+            triple=$(basename "$d" | sed 's/^prebuild-//')
+            cp "${d}libsession_util_nodejs.node" \
+               "release/libsession_util_nodejs-${{ github.ref_name }}-${triple}.node"
+          done
+          cp dist/source-tarball/libsession_util_nodejs-v*.tar.gz release/
+          ls -la release/
+
+      - name: Generate SHA256 manifest
+        shell: bash
+        run: |
+          cd release
+          sha256sum * > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub Release with artefacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --notes "Automated release built from \`${{ github.sha }}\`.
+
+          Prebuilds: \`darwin-arm64\`, \`linux-x64\`. Other platforms
+          fall back to compile-at-install via \`cmake-js build\`.
+
+          Source tarball includes the libsession-util C++ submodule and
+          all dependencies pinned via git SHAs.
+          " \
+            release/*
+
+  publish-package:
+    runs-on: ubuntu-24.04
+    needs: publish-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+      - name: Setup node.js for GitHub Packages
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: ".nvmrc"
+          registry-url: https://npm.pkg.github.com
+          scope: "@klodr"
+
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm publish --no-git-checks --access restricted
