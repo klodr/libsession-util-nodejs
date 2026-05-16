@@ -1,7 +1,7 @@
 /// <reference path="../shared.d.ts" />
 /// <reference path="./usergroups.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   export type ConvoVolatileType = '1o1' | UserGroupsType;
 
   export type BaseConvoInfoVolatile = {

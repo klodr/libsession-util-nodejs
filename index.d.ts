@@ -1,7 +1,7 @@
 
 /// <reference path="./types/index.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   /**
    * This is quite a complex setup, but so far I didn't find an easier way to describe what we want to do with the wrappers and have strong typings.
    *

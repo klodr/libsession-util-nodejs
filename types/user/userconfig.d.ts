@@ -1,7 +1,7 @@
 /// <reference path="../shared.d.ts" />
 /// <reference path="../pro/pro.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   /**
    *
    * User config wrapper logic

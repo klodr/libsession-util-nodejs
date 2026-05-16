@@ -1,19 +1,30 @@
 {
   "main": "index.js",
-  "name": "libsession_util_nodejs",
+  "name": "@klodr/libsession-util-nodejs",
   "packageManager": "pnpm@10.28.1",
-  "description": "Wrappers for the Session Util Library",
-  "version": "0.6.17",
+  "description": "Node.js bindings for libsession-util — klodr fork targeting Node 22 runtime (vs upstream Electron 40)",
+  "version": "0.6.17-klodr.1",
   "license": "GPL-3.0",
   "author": {
     "name": "Oxen Project",
     "email": "team@oxen.io"
   },
+  "contributors": [
+    {
+      "name": "Claude Perrin",
+      "email": "klodr@users.noreply.github.com",
+      "url": "https://github.com/klodr"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klodr/libsession-util-nodejs.git"
+  },
   "scripts": {
     "clean": "rimraf .cache build",
     "lint:cpp": "cppcheck --std=c++20 -j8  src",
     "lint": "find src include -name '*.cpp' -o -name '*.hpp' | xargs clang-format-19 -i",
-    "install": "cmake-js build --runtime=electron --runtime-version=40.0.0 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=OFF",
+    "install": "cmake-js build --runtime=node --runtime-version=22.22.2 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=OFF",
     "prepare_release": "sh prepare_release.sh",
     "dedup": "pnpm dedupe --check"
   },
@@ -22,8 +33,15 @@
     "rimraf": "2.6.2"
   },
   "dependencies": {
-    "cmake-js": "7.3.1",
+    "cmake-js": "8.0.0",
     "node-addon-api": "^8.3.1"
+  },
+  "engines": {
+    "node": ">=22.22.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
   },
   "typings": "index.d.ts"
 }
