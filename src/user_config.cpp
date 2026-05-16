@@ -41,6 +41,7 @@ session::config::ProConfig pro_config_from_object(Napi::Object input) {
     auto gen_index_hash_b64_cpp =
             toCppString(gen_index_hash_b64, "pro_config_from_object.genIndexHashB64");
     auto gen_index_hash_cpp = from_base64_to_vector(gen_index_hash_b64_cpp);
+    assert_length(gen_index_hash_cpp, 32, "pro_config_from_object.gen_index_hash_cpp");
     std::copy(
             gen_index_hash_cpp.begin(),
             gen_index_hash_cpp.end(),
@@ -52,8 +53,8 @@ session::config::ProConfig pro_config_from_object(Napi::Object input) {
     auto signature_hex_cpp =
             toCppString(signature_hex_js, "pro_config_from_object.signature_hex_js");
     auto signature_cpp = from_hex_to_vector(signature_hex_cpp);
-    std::copy(signature_cpp.begin(), signature_cpp.end(), pro_config.proof.sig.begin());
     assert_length(signature_cpp, 64, "pro_config_from_object.signature_cpp");
+    std::copy(signature_cpp.begin(), signature_cpp.end(), pro_config.proof.sig.begin());
 
     // extract expiryMs
     assertIsNumber(proof_js.Get("expiryMs"), "pro_config_from_object.expiryMs");
