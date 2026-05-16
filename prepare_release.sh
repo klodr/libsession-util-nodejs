@@ -12,13 +12,15 @@ read_char() {
 rm -f ./libsession_util_nodejs*.tar.gz
 python -m venv .venv
 . .venv/bin/activate
-pip install git-archive-all
+pip install --require-hashes -r requirements-release.txt
 
 PACKAGE_VERSION=$(node -p "require('./package.json').version")
 GIT_COMMIT=$(git rev-parse HEAD)
 
-HEADER_PACKAGE_VERSION=$(grep 'LIBSESSION_NODEJS_VERSION' src/version.h | sed -E 's/.*"([0-9.]+)".*/\1/')
-HEADER_GIT_COMMIT=$(grep 'LIBSESSION_NODEJS_COMMIT' src/version.h | sed -E 's/.*"([A-Za-z0-9.]+)".*/\1/')
+# Regex accepts SemVer + prerelease suffix (e.g. 0.6.17-klodr.1) by matching
+# anything between the surrounding double quotes rather than digits-and-dots only.
+HEADER_PACKAGE_VERSION=$(grep 'LIBSESSION_NODEJS_VERSION' src/version.h | sed -E 's/.*"([^"]+)".*/\1/')
+HEADER_GIT_COMMIT=$(grep 'LIBSESSION_NODEJS_COMMIT' src/version.h | sed -E 's/.*"([^"]+)".*/\1/')
 
 echo "Package: $PACKAGE_VERSION; Commit: $GIT_COMMIT"
 if [ "$PACKAGE_VERSION" != "$HEADER_PACKAGE_VERSION" ]; then
@@ -34,7 +36,7 @@ fi
 echo "Is '$PACKAGE_VERSION' the correct version? If yes, press 'y' to create the release. Press anything else to exit."
 read_char char_read
 case "$char_read" in
-    y) break ;;
+    y) ;;
     *) echo "Exiting..."; exit 1 ;;
 esac
 
