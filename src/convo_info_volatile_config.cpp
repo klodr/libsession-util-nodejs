@@ -58,7 +58,13 @@ struct toJs_impl<convo::one_to_one> {
         obj["pubkeyHex"] = toJs(env, info_1o1.session_id);
         addBaseValues(env, obj, info_1o1);
 
-        if (info_1o1.pro_gen_index_hash->empty() ||
+        // `pro_gen_index_hash` is `std::optional<std::array<uint8_t, 32>>`
+        // (see libsession-util include/session/config/convo_info_volatile.hpp).
+        // Dereferencing the optional without `has_value()` is UB; additionally
+        // `std::array::empty()` is always false for a fixed-size array, so the
+        // original `->empty()` check was both unsafe and a no-op. The intent is
+        // "if the hash is unset OR the Pro expiry is 0, emit null".
+        if (!info_1o1.pro_gen_index_hash ||
             !info_1o1.pro_expiry_unix_ts.time_since_epoch().count()) {
             obj["proGenIndexHashB64"] = env.Null();
             obj["proExpiryTsMs"] = env.Null();

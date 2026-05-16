@@ -215,6 +215,7 @@ Napi::Value MultiEncryptWrapper::multiEncrypt(const Napi::CallbackInfo& info) {
         assertIsUInt8Array(obj.Get("ed25519SecretKey"), "multiEncrypt.ed25519SecretKey");
         auto ed25519SecretKey =
                 toCppBuffer(obj.Get("ed25519SecretKey"), "multiEncrypt.ed25519SecretKey");
+        assert_length(ed25519SecretKey, 64, "multiEncrypt.ed25519SecretKey");
 
         assertIsString(obj.Get("domain"), "multiEncrypt.domain");
         auto domain = toCppString(obj.Get("domain"), "multiEncrypt.domain");
