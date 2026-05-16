@@ -1,6 +1,6 @@
 /// <reference path="../shared.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   export type GroupKeysWrapper = {
     // GroupKeys related methods
     keysNeedsRekey: () => boolean;
