@@ -5,7 +5,7 @@
  * Contacts wrapper logic
  *
  */
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   type ContactsWrapper = BaseConfigWrapper & {
     init: (secretKey: Uint8Array, dump: Uint8Array | null) => void;
     /** This function is used to free wrappers from memory only */

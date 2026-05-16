@@ -1,6 +1,6 @@
 /// <reference path="./pro/pro.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   type Uint8ArrayFixedLength<T extends number> = {
     buffer: Uint8Array;
     length: T;

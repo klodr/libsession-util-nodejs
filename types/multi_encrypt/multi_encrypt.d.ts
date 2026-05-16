@@ -1,7 +1,7 @@
 /// <reference path="../shared.d.ts" />
 /// <reference path="../pro/pro.d.ts" />
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   type WithEncryptedData = { encryptedData: Uint8Array };
   type WithPlaintext = { plaintext: Uint8Array };
   type WithSentTimestampMs = {

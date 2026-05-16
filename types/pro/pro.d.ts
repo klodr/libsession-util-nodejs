@@ -1,6 +1,6 @@
 /// <reference path="../shared.d.ts" />;
 
-declare module 'libsession_util_nodejs' {
+declare module '@klodr/libsession-util-nodejs' {
   type WithProRotatingEd25519PrivKey = { proRotatingEd25519PrivKey: string | null };
 
   type WithProBackendPubkey = {
