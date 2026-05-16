@@ -83,5 +83,25 @@ jobs:
       - name: Ensure pnpm-lock.yaml has no duplicates
         run: pnpm dedupe --check
 
+      - name: R14 sentinel — ENABLE_NETWORKING must stay OFF
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          # See docs/V2_PHASE1_FORK.md R14 in klodr/session-messenger.
+          # Flipping ENABLE_NETWORKING to ON would re-activate the
+          # build_external() path that downloads from oxen.rocks/deps
+          # for gmp/openssl/etc — a supply-chain surface this fork
+          # intentionally avoids. Any change here requires explicit
+          # crypto review and updating both the R14 section and this
+          # sentinel.
+          if ! grep -q '^set(ENABLE_NETWORKING OFF)' CMakeLists.txt; then
+            echo "::error file=CMakeLists.txt::ENABLE_NETWORKING is no longer pinned OFF (R14 sentinel)."
+            exit 1
+          fi
+          if ! grep -q -- '--CDENABLE_NETWORKING=OFF' package.json; then
+            echo "::error file=package.json::install script no longer passes --CDENABLE_NETWORKING=OFF (R14 sentinel)."
+            exit 1
+          fi
+
       - name: Validate formatting & linting changed no files
         run: git diff --exit-code
