@@ -22,8 +22,29 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
             "LoggerCallback",
             0,
             1);
+    // The logger callback is fire-and-forget. Without Unref(), the
+    // TSFN keeps a strong ref on the loop and a `require()` from a
+    // short-lived CLI hangs forever waiting on the TSFN.
+    tsfn.Unref(env);
+
+    // Release the TSFN when the N-API env tears down. Without this,
+    // a later libsession log from a background thread could
+    // BlockingCall into a destroyed env (abort / UAF).
+    napi_add_env_cleanup_hook(
+            env,
+            [](void*) {
+                if (tsfn) {
+                    tsfn.Release();
+                    tsfn = nullptr;
+                }
+            },
+            nullptr);
 
     session::add_logger([](std::string_view msg) {
+        // env-cleanup may have raced ahead — silently drop the log
+        // instead of aborting on a released TSFN.
+        if (!tsfn)
+            return;
         tsfn.BlockingCall(
                 new std::string(msg),
                 [](Napi::Env env, Napi::Function jsCallback, std::string* msg) {
