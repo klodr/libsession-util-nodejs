@@ -52,6 +52,7 @@ class BlindingWrapper : public Napi::ObjectWrap<BlindingWrapper> {
             assertIsUInt8Array(obj.Get("ed25519SecretKey"), "BlindingWrapper::blindVersionPubkey");
             auto ed25519_secret_key =
                     toCppBuffer(obj.Get("ed25519SecretKey"), "blindVersionPubkey.ed25519SecretKey");
+            assert_length(ed25519_secret_key, 64, "blindVersionPubkey.ed25519SecretKey");
 
             auto keypair = session::blind_version_key_pair(ed25519_secret_key);
             session::uc32 pk_arr = std::get<0>(keypair);
@@ -78,6 +79,7 @@ class BlindingWrapper : public Napi::ObjectWrap<BlindingWrapper> {
                     obj.Get("ed25519SecretKey"), "blindVersionSignRequest.ed25519SecretKey");
             auto ed25519_secret_key = toCppBuffer(
                     obj.Get("ed25519SecretKey"), "blindVersionSignRequest.ed25519SecretKey");
+            assert_length(ed25519_secret_key, 64, "blindVersionSignRequest.ed25519SecretKey");
 
             assertIsNumber(
                     obj.Get("sigTimestampSeconds"), "blindVersionSignRequest.sigTimestampSeconds");

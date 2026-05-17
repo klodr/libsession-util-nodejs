@@ -6,7 +6,7 @@ This library is the wrappers around libsession-util for NodeJS. It is built usin
 
 Clone this project to somewhere **not** part of `session-desktop` node_modules:
 
-```
+```bash
 cd [FOLDER_NOT_IN_SESSION_DESKTOP]
 git clone --recursive git@github.com:session-foundation/libsession-util-nodejs.git
 ```
@@ -15,7 +15,7 @@ Always do your changes in `[FOLDER_NOT_IN_SESSION_DESKTOP]/libsession-util-nodej
 Then, you can quickly compile a non-electron build by first running `pnpm install` from that folder. This is a quick incremental build which can check for C++ compilation errors.
 Once your changes are ready to be tested in the `session-desktop` you can compile an electron build using this command:
 
-```
+```bash
 cd [SESSION_DESKTOP_PATH]; rm -rf node_modules/libsession_util_nodejs; cp -R [THIS_PROJECT_PATH] node_modules/libsession_util_nodejs; cd node_modules/libsession_util_nodejs && rm -rf build && pnpm install && cd [SESSION_DESKTOP_PATH] && pnpm build:workers
 ```
 
@@ -39,7 +39,7 @@ Note: The `electron` property in the `config` object will need to be updated in 
 
 Then, run these commands:
 
-```
+```bash
 # bump the version in the package.json
 git add .
 git commit
@@ -55,7 +55,7 @@ The git-archive-all relies on the `.gitattributes` to know what to include or ex
 Once this is done, update the dependency on `session-desktop`.
 Make sure to remove the existing one first (with the include `pnpm remove` below) as you might have messed up your `node_modules` doing the dev instructions.
 
-```
+```bash
 pnpm remove libsession_util_nodejs && pnpm add https://github.com/session-foundation/libsession-util-nodejs/releases/download/v0.1.15/libsession_util_nodejs-v0.1.15.tar.gz
 ```
 

@@ -56,7 +56,7 @@ declare module '@klodr/libsession-util-nodejs' {
      * see `SESSION_PROTOCOL_PRO_FEATURES`.
      * To unset the pro features, set this to 0, if undefined or null no changes
      */
-    proProfileBitset?: bigint;
+    proProfileBitset?: bigint | null;
   };
 
   export type ContactInfoGet = ContactInfoShared & {

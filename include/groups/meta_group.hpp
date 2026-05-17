@@ -1,7 +1,9 @@
 #pragma once
 
 #include <napi.h>
+#include <oxenc/hex.h>
 
+#include <optional>
 #include <vector>
 
 #include "session/config/groups/info.hpp"

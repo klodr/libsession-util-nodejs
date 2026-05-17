@@ -204,7 +204,8 @@ class ProWrapper : public Napi::ObjectWrap<ProWrapper> {
             auto rotating_privkey_decoded = from_hex(rotating_privkey);
 
             std::string json = pro_backend::GenerateProProofRequest::build_to_json(
-                    static_cast<uint8_t>(requestVersion.Int32Value()),
+                    toCppUint8Strict(
+                            first.Get("requestVersion"), "proProofRequestBody.requestVersion"),
                     to_span(master_privkey_decoded),
                     to_span(rotating_privkey_decoded),
                     unix_ts_ms);
@@ -236,7 +237,9 @@ class ProWrapper : public Napi::ObjectWrap<ProWrapper> {
             auto ticket = first.Get("ticket").As<Napi::Number>();
 
             auto revocationsRequest = pro_backend::GetProRevocationsRequest{
-                    .version = static_cast<uint8_t>(requestVersion.Int32Value()),
+                    .version = toCppUint8Strict(
+                            first.Get("requestVersion"),
+                            "proRevocationsRequestBody.requestVersion"),
                     .ticket = ticket.Uint32Value(),
             };
 
@@ -278,7 +281,8 @@ class ProWrapper : public Napi::ObjectWrap<ProWrapper> {
             auto master_privkey_decoded = from_hex(master_privkey);
 
             auto json = pro_backend::GetProDetailsRequest::build_to_json(
-                    static_cast<uint8_t>(requestVersion.Int32Value()),
+                    toCppUint8Strict(
+                            first.Get("requestVersion"), "proStatusRequestBody.requestVersion"),
                     to_span(master_privkey_decoded),
                     unix_ts_ms,
                     count);
