@@ -162,7 +162,12 @@ void ContactsConfigWrapper::set(const Napi::CallbackInfo& info) {
                 contact.profile_picture.clear();
         }
 
-        if (auto proProfileBitset = maybeNonemptyIntB(
+        // Use the unsigned parser: `profile_bitset.data` is uint64 and
+        // a negative BigInt (e.g. -1n) lossless-fits int64 but wraps
+        // to 0xFFFFFFFFFFFFFFFF on assignment, which is exactly the
+        // high-bit injection the lossless guard in toCppIntegerB was
+        // supposed to block.
+        if (auto proProfileBitset = maybeNonemptyUintB(
                     obj.Get("proProfileBitset"), "ContactsConfigWrapper.set proProfileBitset")) {
             contact.profile_bitset.data = *proProfileBitset;
         }
