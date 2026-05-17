@@ -41,12 +41,16 @@ const SUPPORTED = new Set(['darwin-arm64', 'linux-x64'])
 
 // cmake-js argv kept in sync with the legacy `install:from-source`
 // script. Centralised here so the prebuild path and the source-build
-// path share one source of truth.
+// path share one source of truth. Runtime + version are read from env
+// vars (matching the upstream surface — defaults to node/22.22.2 in
+// THIS fork; upstream defaults to electron/40.0.0).
+const RUNTIME = process.env.LIBSESSION_RUNTIME || 'node'
+const RUNTIME_VERSION = process.env.LIBSESSION_RUNTIME_VERSION || '22.22.2'
 const CMAKE_JS_ARGS = [
   'cmake-js',
   'build',
-  '--runtime=node',
-  '--runtime-version=22.22.2',
+  `--runtime=${RUNTIME}`,
+  `--runtime-version=${RUNTIME_VERSION}`,
   '--CDSUBMODULE_CHECK=OFF',
   '--CDLOCAL_MIRROR=https://oxen.rocks/deps',
   '--CDENABLE_NETWORKING=OFF',
