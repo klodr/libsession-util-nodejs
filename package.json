@@ -2,8 +2,8 @@
   "main": "index.js",
   "name": "@klodr/libsession-util-nodejs",
   "packageManager": "pnpm@10.28.1",
-  "description": "Node.js bindings for libsession-util — klodr fork targeting Node 22 runtime (vs upstream Electron 40)",
-  "version": "0.6.21",
+  "description": "Node.js bindings for libsession-util \u2014 klodr fork targeting Node 22 runtime (vs upstream Electron 40)",
+  "version": "0.6.22",
   "files": [
     "index.js",
     "index.d.ts",

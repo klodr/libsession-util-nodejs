@@ -81,8 +81,17 @@ int64_t toCppInteger(Napi::Value x, const std::string& identifier, bool allowUnd
  */
 int64_t toCppIntegerB(Napi::Value x, const std::string& identifier, bool allowUndefined = false);
 
+/**
+ * Unsigned variant of toCppIntegerB. Rejects negative BigInts so a
+ * caller's -1n doesn't silently wrap to 0xFFFFFFFFFFFFFFFF when stored
+ * in a uint64 field (bitsets, profile flags, etc.).
+ */
+uint64_t toCppUnsignedIntegerB(
+        Napi::Value x, const std::string& identifier, bool allowUndefined = false);
+
 std::optional<int64_t> maybeNonemptyInt(Napi::Value x, const std::string& identifier);
 std::optional<int64_t> maybeNonemptyIntB(Napi::Value x, const std::string& identifier);
+std::optional<uint64_t> maybeNonemptyUintB(Napi::Value x, const std::string& identifier);
 
 std::optional<bool> maybeNonemptyBoolean(Napi::Value x, const std::string& identifier);
 std::optional<std::chrono::sys_seconds> maybeNonemptySysSeconds(
@@ -458,9 +467,7 @@ std::vector<unsigned char> from_base64_to_vector(std::string_view x);
 // Concept to match containers with a size() method
 template <typename T>
 concept HasSize = requires(T t) {
-    {
-        t.size()
-    } -> std::convertible_to<size_t>;
+    { t.size() } -> std::convertible_to<size_t>;
 };
 
 template <HasSize T>

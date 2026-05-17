@@ -175,6 +175,46 @@ std::optional<int64_t> maybeNonemptyIntB(Napi::Value x, const std::string& ident
     throw std::invalid_argument{"maybeNonemptyInt with invalid type, called from " + identifier};
 }
 
+uint64_t toCppUnsignedIntegerB(Napi::Value x, const std::string& identifier, bool allowUndefined) {
+    // Dedicated unsigned parser for fields that the C++ side stores as
+    // uint64 (bitsets, profile flags, etc.). The v0.6.19 lossless check
+    // on toCppIntegerB only catches BigInts outside int64_t range, but
+    // a NEGATIVE BigInt (e.g. -1n) is lossless as int64_t and silently
+    // wraps to 0xFFFFFFFFFFFFFFFF when assigned to uint64 — exactly
+    // the high-bit injection the lossless check was supposed to block.
+    // Use Uint64Value + explicit non-negative guard.
+    auto lossless = true;
+    if (allowUndefined && (x.IsNull() || x.IsUndefined()))
+        return 0;
+    if (x.IsBigInt()) {
+        auto bigint = x.As<Napi::BigInt>();
+        // BigInt::ToWords() exposes the sign explicitly; Uint64Value
+        // doesn't. Reject negatives BEFORE the unsigned conversion so
+        // -1n doesn't silently become 0xFFFFFFFFFFFFFFFF.
+        int signBit = 0;
+        size_t wordCount = 0;
+        bigint.ToWords(&signBit, &wordCount, nullptr);
+        if (signBit != 0)
+            throw std::invalid_argument{"BigInt is negative for unsigned field "s + identifier};
+        auto value = bigint.Uint64Value(&lossless);
+        if (!lossless)
+            throw std::invalid_argument{"BigInt out of uint64_t range for "s + identifier};
+        return value;
+    }
+
+    throw std::invalid_argument{"Unsupported type for "s + identifier + ": expected a bigint"};
+}
+
+std::optional<uint64_t> maybeNonemptyUintB(Napi::Value x, const std::string& identifier) {
+    if (x.IsNull() || x.IsUndefined())
+        return std::nullopt;
+    if (x.IsBigInt()) {
+        return toCppUnsignedIntegerB(x, identifier);
+    }
+
+    throw std::invalid_argument{"maybeNonemptyUint with invalid type, called from " + identifier};
+}
+
 std::optional<int64_t> maybeNonemptyInt(Napi::Value x, const std::string& identifier) {
     if (x.IsNull() || x.IsUndefined())
         return std::nullopt;

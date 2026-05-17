@@ -68,9 +68,25 @@ jobs:
         uses: microsoft/setup-msbuild@6fb02220983dee41ce7ae257b6f4d8f9bf5ed4ce # v2.0.0
         if: runner.os == 'Windows'
 
-      - name: build libsession-util-nodejs
+      - name: install deps (no lifecycle scripts)
         shell: bash
-        run: pnpm install --frozen-lockfile
+        # --ignore-scripts ensures the install-from-prebuild.mjs path
+        # does NOT run, so the PR CI exercises the actual modified
+        # source tree instead of the previously-published prebuild
+        # asset matching the current package.json version. Without
+        # this, a v0.6.22 PR would download v0.6.22 prebuild (when
+        # released) or fall back to cmake-js from the bumped version
+        # — either way the SOURCE under review may not be what got
+        # compiled and tested.
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: build libsession-util-nodejs from source
+        shell: bash
+        # Force the source build path. This is the test target — we
+        # verify the .cpp changes in the PR actually compile and
+        # behave correctly, not that an already-published prebuild
+        # still does.
+        run: pnpm run install:from-source
         env:
           CMAKE_C_COMPILER_LAUNCHER: ccache
           CMAKE_CXX_COMPILER_LAUNCHER: ccache
