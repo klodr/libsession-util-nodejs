@@ -49,7 +49,14 @@ project(libsession_util_nodejs LANGUAGES CXX)
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(CMAKE_BUILD_TYPE Release)
-SET(WITH_TESTS OFF)
+# WITH_TESTS pulls in the libsession-util upstream Catch2 suite
+# (libsession-util/tests/CMakeLists.txt — ~30+ test_*.cpp files).
+# Default OFF so consumer installs (cmake-js build via `pnpm install`)
+# stay fast; override with `cmake-js build --CDWITH_TESTS=ON` for the
+# dedicated `pnpm test:cpp` script and the cpp-tests CI job.
+if(NOT DEFINED WITH_TESTS)
+    SET(WITH_TESTS OFF)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
