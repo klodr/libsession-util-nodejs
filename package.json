@@ -40,6 +40,8 @@
   },
   "scripts": {
     "clean": "rimraf .cache build",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint:cpp": "cppcheck --std=c++20 -j8  src",
     "lint": "find src include -name '*.cpp' -o -name '*.hpp' | xargs clang-format-19 -i",
     "install": "cmake-js build --runtime=node --runtime-version=22.22.2 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=OFF",
@@ -47,8 +49,10 @@
     "dedup": "pnpm dedupe --check"
   },
   "devDependencies": {
+    "@types/node": "^25.8.0",
     "clang-format": "^1.8.0",
-    "rimraf": "2.6.2"
+    "rimraf": "2.6.2",
+    "vitest": "^4.1.6"
   },
   "dependencies": {
     "cmake-js": "8.0.0",
