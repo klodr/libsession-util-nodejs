@@ -103,5 +103,14 @@ jobs:
             exit 1
           fi
 
+      - name: Run JS round-trip tests (vitest)
+        # First JS test surface for the binding. Pins the
+        # MultiEncryptWrapperNode contract (assert_length on
+        # ed25519PrivateKeyHex/proBackendPubkeyHex, encryptFor1o1
+        # output shape, etc.) so a future C++ change that breaks the
+        # JS interface trips a red CI instead of silently shipping a
+        # broken consumer install. See tests/.
+        run: pnpm test
+
       - name: Validate formatting & linting changed no files
         run: git diff --exit-code
