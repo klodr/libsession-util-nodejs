@@ -1,30 +1,33 @@
 #!/usr/bin/env node
 /**
- * Try to install a published prebuild for the current platform+arch
- * matching this package's version. On success, exits 0 — the .node
- * file is in build/Release/ and cmake-js can be skipped entirely.
- * On failure (no prebuild for platform, network down, integrity
- * mismatch), exits non-zero so the caller falls back to building
- * from source via cmake-js.
+ * Single entry point for installing the native addon. Owns both the
+ * prebuild-download path and the cmake-js-from-source fallback so the
+ * exit code semantics are unambiguous:
+ *
+ *   exit 0   prebuild OR cmake-js succeeded
+ *   exit 1   supply-chain anomaly (checksum mismatch, manifest miss,
+ *            missing package.json version) — DO NOT FALL BACK
  *
  * Wiring in package.json:
  *
- *   "install": "node scripts/install-from-prebuild.mjs || cmake-js build ..."
+ *   "install": "node scripts/install-from-prebuild.mjs"
  *
- * The `||` fallback chain means:
- *  - prebuild OK  -> exit 0, cmake-js never runs (~2s install vs ~15-25min)
- *  - prebuild KO  -> exit !=0, cmake-js compiles from source
+ * The previous wiring `node ... || cmake-js build ...` collapsed
+ * every non-zero exit into "fall back to source build", which meant
+ * a tampered prebuild's checksum mismatch was silently masked by a
+ * subsequent successful cmake-js build. Owning the fallback inside
+ * the script prevents that.
  *
- * Integrity gate:
- *  - Every supported triple's .node is SHA256-checked against the
- *    SHA256SUMS manifest attached to the same GitHub Release.
- *  - A mismatch is a supply-chain red flag, so we hard-fail (exit 1).
- *    Falling back to cmake-js on a tampered download would silently
- *    hide the tamper — that path is reserved for legitimate misses.
+ * Decision tree (current platform-arch):
+ *  - supported AND prebuild OK   -> place .node, exit 0
+ *  - supported AND integrity bad -> exit 1 (hard fail, supply-chain)
+ *  - supported AND download miss -> spawn cmake-js, exit its code
+ *  - unsupported                 -> spawn cmake-js, exit its code
  *
  * Supported triples (matches release.yml CI matrix):
  *   darwin-arm64, linux-x64
  */
+import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
 import { constants } from 'node:fs'
@@ -35,6 +38,30 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const PACKAGE_ROOT = join(__dirname, '..')
 
 const SUPPORTED = new Set(['darwin-arm64', 'linux-x64'])
+
+// cmake-js argv kept in sync with the legacy `install:from-source`
+// script. Centralised here so the prebuild path and the source-build
+// path share one source of truth.
+const CMAKE_JS_ARGS = [
+  'cmake-js',
+  'build',
+  '--runtime=node',
+  '--runtime-version=22.22.2',
+  '--CDSUBMODULE_CHECK=OFF',
+  '--CDLOCAL_MIRROR=https://oxen.rocks/deps',
+  '--CDENABLE_NETWORKING=OFF',
+  '--CDWITH_TESTS=OFF',
+]
+
+function runCmakeJsFallback(reason) {
+  console.log(`[install-from-prebuild] ${reason}; building from source via cmake-js`)
+  const result = spawnSync('npx', CMAKE_JS_ARGS, {
+    cwd: PACKAGE_ROOT,
+    stdio: 'inherit',
+    shell: false,
+  })
+  process.exit(result.status ?? 1)
+}
 
 async function main() {
   const platform = process.platform
@@ -49,18 +76,15 @@ async function main() {
   }
 
   if (!SUPPORTED.has(triple)) {
-    // No prebuild — exit non-zero so the install || chain falls back
-    // to cmake-js. This is the normal path on, e.g., linux-arm64 or
-    // windows-x64 today (until those land in the matrix).
-    console.log(
-      `[install-from-prebuild] no prebuild for ${triple}; falling back to cmake-js`,
-    )
-    process.exit(2)
+    runCmakeJsFallback(`no prebuild for ${triple}`)
+    return // unreachable; runCmakeJsFallback exits
   }
 
   const pkg = JSON.parse(await readFile(join(PACKAGE_ROOT, 'package.json'), 'utf8'))
   const version = pkg.version
   if (typeof version !== 'string' || !version) {
+    // Supply-chain anomaly: a tampered or malformed package.json
+    // can't be silently papered over by a source build either.
     throw new Error('[install-from-prebuild] package.json version missing')
   }
   const tag = `v${version}`
@@ -77,8 +101,8 @@ async function main() {
     ;[bin, sumsText] = await Promise.all([fetchBuffer(url), fetchText(sumsUrl)])
   } catch (err) {
     // Network class error (404, 5xx, DNS, etc.) — fall back to source build.
-    console.log(`[install-from-prebuild] download failed: ${err.message}; falling back to cmake-js`)
-    process.exit(3)
+    runCmakeJsFallback(`download failed: ${err.message}`)
+    return // unreachable; runCmakeJsFallback exits
   }
 
   // SHA256SUMS line format: `<hex>  <filename>`.
@@ -137,16 +161,10 @@ async function fetchText(url) {
 main().catch((err) => {
   const msg = err?.message ?? String(err)
   console.error(`[install-from-prebuild] ${msg}`)
-  // Integrity failures MUST stop the install pipeline (don't fall
-  // back to cmake-js after detecting tampering).
-  if (
-    msg.includes('checksum mismatch') ||
-    msg.includes('no SHA256 entry') ||
-    msg.includes('package.json version missing')
-  ) {
-    process.exit(1)
-  }
-  // Other unexpected errors (filesystem ENOSPC, etc.): fall back to
-  // cmake-js so the consumer at least gets a chance to compile.
-  process.exit(4)
+  // Hard fail. Integrity errors (checksum mismatch, missing SHA256
+  // entry, malformed package.json) MUST stop the install — falling
+  // back to cmake-js would silently hide a supply-chain anomaly.
+  // Filesystem-class errors (ENOSPC, EACCES) are also non-recoverable
+  // here; surfacing them is more useful than silently switching paths.
+  process.exit(1)
 })
