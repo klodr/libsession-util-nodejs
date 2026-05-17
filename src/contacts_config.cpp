@@ -162,7 +162,10 @@ void ContactsConfigWrapper::set(const Napi::CallbackInfo& info) {
                 contact.profile_picture.clear();
         }
 
-        if (auto proProfileBitset = maybeNonemptyIntB(
+        // `profile_bitset.data` is `uint64_t`; use the unsigned parser
+        // so a negative BigInt on the JS side is rejected instead of
+        // silently wrapping to `0xFFFFFFFFFFFFFFFF`.
+        if (auto proProfileBitset = maybeNonemptyUintB(
                     obj.Get("proProfileBitset"), "ContactsConfigWrapper.set proProfileBitset")) {
             contact.profile_bitset.data = *proProfileBitset;
         }
