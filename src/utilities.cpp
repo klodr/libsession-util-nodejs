@@ -158,8 +158,7 @@ int64_t toCppIntegerB(Napi::Value x, const std::string& identifier, bool allowUn
         // (e.g. bit 63 of a uint64 Pro feature bitset accidentally set)
         // doesn't silently store the wrong value.
         if (!lossless)
-            throw std::invalid_argument{
-                    "BigInt out of int64_t range for "s + identifier};
+            throw std::invalid_argument{"BigInt out of int64_t range for "s + identifier};
         return value;
     }
 
