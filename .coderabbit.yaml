@@ -1,0 +1,127 @@
+# CodeRabbit configuration
+# Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
+#
+# NOTE — CodeRabbit must NOT push commits to this repo.
+# The branch protection on main requires "approval from someone other
+# than the last pusher". On a solo-maintainer repo, a CodeRabbit-authored
+# commit makes the bot both the last pusher AND the approver, which
+# makes the rule impossible to satisfy and deadlocks the PR.
+#
+# Never use `@coderabbitai apply suggestions`, `@coderabbitai auto_commit`,
+# or click GitHub's "Commit suggestion" button on CodeRabbit inline
+# suggestions. If a suggestion is valuable, copy the diff and commit it
+# as a human — keep CodeRabbit's role strictly read-only.
+
+language: en-US
+early_access: false
+
+reviews:
+  profile: assertive # stricter feedback (vs "chill")
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  poem: false # no decorative poetry
+  in_progress_fortune: false # no fortune-cookie message during reviews
+  review_status: true
+  collapse_walkthrough: false
+  abort_on_close: true
+  auto_title_instructions: |
+    Use Conventional Commits format: <type>[(<scope>)]: <subject>
+    Types: feat, fix, docs, chore, refactor, test, ci, build, perf, revert.
+    Scope is optional (e.g. `chore: ...` is valid).
+    Cap the entire title (including type and optional scope) at 72 characters.
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+    base_branches:
+      - main
+
+  pre_merge_checks:
+    docstrings:
+      # The N-API binding code intentionally keeps comments to non-
+      # obvious WHY only. The wrapper symbols themselves already
+      # describe what they do (extractFoo, toCppBar, etc.); forced
+      # docstrings would just paraphrase the function name.
+      mode: "off"
+    title:
+      mode: error
+      requirements: |
+        Conventional Commits format: <type>[(<scope>)]: <subject>.
+        Types: feat, fix, docs, chore, refactor, test, ci, build, perf, revert.
+        Scope is optional (e.g. `chore: ...` is valid without scope).
+        Subject must be in imperative mood, lowercase, no trailing period.
+        Total title length (including type/scope) must be <= 72 characters.
+    # If a specific human reviewer is explicitly requested on a PR
+    # (via GitHub's "Reviewers" UI), CodeRabbit's own approval must NOT
+    # count as a substitute for theirs. Does not affect the common case
+    # where no specific reviewer is requested.
+    override_requested_reviewers_only: true
+
+  path_filters:
+    # The libsession-util/ directory is the upstream C++ library
+    # vendored as a git submodule — not our code. Skip it entirely
+    # so reviews stay focused on the wrapper we actually maintain.
+    - "!libsession-util/**"
+
+  path_instructions:
+    - path: "src/**/*.cpp"
+      instructions: |
+        N-API binding code. For every change:
+        - Reject untrusted JS input at the boundary (assertIsString /
+          assertIsUInt8Array / assertIsObject / assert_length). Never
+          assume Napi::Value types are what the .d.ts says they are.
+        - For std::span / std::string_view captures into background
+          threads or libsession callbacks, verify the backing storage
+          outlives the span (copy into std::vector if unsure).
+        - For Napi::BigInt → C++ integer, always use the lossless
+          variant of Int64Value / Uint64Value AND throw on truncation.
+          For uint64 destinations, reject negative BigInts via
+          ToWords(sign_bit, ...) BEFORE the unsigned conversion.
+        - For ThreadSafeFunction handles, scope per-env via
+          napi_set_instance_data (not process-global). On env
+          teardown, Release()/Abort() + guard subsequent calls.
+        - For try/catch around session::* calls, surface e.what() in
+          the log line. A bare "Failed to X at index N" makes the
+          consumer-side bug invisible.
+    - path: "include/**/*.hpp"
+      instructions: |
+        Headers + toJs_impl / toCppX template specializations.
+        Verify reinterpret_cast<T*>(...) calls aren't accidentally
+        using the comma operator (`reinterpret_cast<T*>(a, b)`
+        discards `a` — a frequent footgun on span/vector data).
+        Verify any add_logger / add_X registration that captures by
+        reference doesn't outlive its capture target.
+    - path: "scripts/**/*.{mjs,js,py}"
+      instructions: |
+        Build / install / release scripts. For supply-chain integrity:
+        - Network fetches must verify a digest (SHA256 / signed
+          attestation) against an in-repo signed value, NOT against
+          a manifest fetched from the same mutable source.
+        - Python scripts must strip sys.path[0] before importing pip-
+          pinned packages so a checked-in module of the same name
+          doesn't shadow the hash-pinned one.
+        - Install hook fallback chains (`a || b`) must propagate
+          integrity errors as hard failures, not collapse into the
+          fallback path.
+    - path: ".github/workflows/**"
+      instructions: |
+        CI / release pipelines. Verify:
+        - All third-party actions pinned by full commit SHA (not
+          floating tags) since tag-moves on the action repo are a
+          known exfil path.
+        - Tag-triggered publish jobs do NOT carry `id-token: write`
+          or `attestations: write` unless they actually use them.
+        - `actions/checkout` sets `persist-credentials: false` if the
+          job invokes any third-party install/postinstall script
+          before the publish step.
+        - `npm ci --ignore-scripts` is preferred for publish jobs,
+          with the few audited scripts (binding install, prebuild
+          verifier) re-invoked explicitly as separate steps.
+
+chat:
+  auto_reply: true
+  art: false # no ASCII/emoji art in chat responses
