@@ -1,0 +1,65 @@
+name: cpp-tests
+
+# Upstream libsession-util ships ~30 Catch2 test files (~5000 LOC) under
+# libsession-util/tests/. The fork hard-disables them at install time
+# (`--CDWITH_TESTS=OFF`) so consumer installs stay fast, but the suite
+# is the most thorough validation of the C++ surface the binding wraps.
+# This workflow opts in: build with WITH_TESTS=ON and run `testAll`.
+#
+# Triggered manually (workflow_dispatch) or weekly so we have a recent
+# signal without slowing down PR cycles. A regression here means a
+# binding update broke something the upstream consensus considered
+# correct — which is exactly the kind of bug a JS-only test surface
+# would not catch.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 04:00 UTC.
+    - cron: '0 4 * * 0'
+
+permissions:
+  contents: read
+
+jobs:
+  catch2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+
+      - name: System build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake ninja-build build-essential \
+            libsystemd-dev libssl-dev
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@5ebbd400eff9e74630f759d94ddd7b6c26299639 # v1.2
+        with:
+          key: ubuntu-24.04-ccache-libsession-util-nodejs-cpp-tests
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4
+
+      - name: Setup node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (binding + dev deps)
+        run: pnpm install --frozen-lockfile
+        env:
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache
+
+      - name: Build + run upstream Catch2 suite (WITH_TESTS=ON)
+        run: pnpm test:cpp
+        env:
+          CMAKE_C_COMPILER_LAUNCHER: ccache
+          CMAKE_CXX_COMPILER_LAUNCHER: ccache

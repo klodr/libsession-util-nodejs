@@ -42,6 +42,7 @@
     "clean": "rimraf .cache build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:cpp": "cmake-js build --runtime=node --runtime-version=22.22.2 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=ON --target testAll && ./build/libsession-util/tests/testAll",
     "lint:cpp": "cppcheck --std=c++20 -j8  src",
     "lint": "find src include -name '*.cpp' -o -name '*.hpp' | xargs clang-format-19 -i",
     "install": "cmake-js build --runtime=node --runtime-version=22.22.2 --CDSUBMODULE_CHECK=OFF --CDLOCAL_MIRROR=https://oxen.rocks/deps --CDENABLE_NETWORKING=OFF --CDWITH_TESTS=OFF",
