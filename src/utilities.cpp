@@ -151,8 +151,17 @@ int64_t toCppIntegerB(Napi::Value x, const std::string& identifier, bool allowUn
     auto lossless = true;
     if (allowUndefined && (x.IsNull() || x.IsUndefined()))
         return 0;
-    if (x.IsBigInt())
-        return x.As<Napi::BigInt>().Int64Value(&lossless);
+    if (x.IsBigInt()) {
+        auto value = x.As<Napi::BigInt>().Int64Value(&lossless);
+        // Napi reports whether the conversion truncated. Reject silent
+        // truncation so a caller passing a BigInt outside int64_t range
+        // (e.g. bit 63 of a uint64 Pro feature bitset accidentally set)
+        // doesn't silently store the wrong value.
+        if (!lossless)
+            throw std::invalid_argument{
+                    "BigInt out of int64_t range for "s + identifier};
+        return value;
+    }
 
     throw std::invalid_argument{"Unsupported type for "s + identifier + ": expected a bigint"};
 }
