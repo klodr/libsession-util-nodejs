@@ -210,9 +210,12 @@ struct toJs_impl<std::array<std::byte, N>> {
 template <>
 struct toJs_impl<std::span<std::byte>> {
     auto operator()(const Napi::Env& env, std::span<std::byte> b) const {
-        auto data = b.data();
-        auto data_uchar = reinterpret_cast<const unsigned char*>(data, b.size());
-
+        // The original `reinterpret_cast<const unsigned char*>(data, b.size())`
+        // is a comma operator: it discards `data` and casts `size_t` as a
+        // pointer, producing a wild address. Currently dormant (no callers
+        // return std::span<std::byte> through this template in the fork),
+        // but a single accidental use would SIGSEGV the Node process.
+        auto data_uchar = reinterpret_cast<const unsigned char*>(b.data());
         return Napi::Buffer<uint8_t>::Copy(env, data_uchar, b.size());
     }
 };
