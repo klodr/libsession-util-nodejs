@@ -1,3 +1,5 @@
+#pragma once
+
 #include "session/config/community.hpp"
 #include "utilities.hpp"
 

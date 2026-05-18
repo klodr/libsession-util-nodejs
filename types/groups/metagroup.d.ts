@@ -113,12 +113,18 @@ declare module '@klodr/libsession-util-nodejs' {
     // keys
     public keysNeedsRekey: MetaGroupWrapper['keysNeedsRekey'];
     public keyRekey: MetaGroupWrapper['keyRekey'];
+    public keyGetAll: MetaGroupWrapper['keyGetAll'];
+    public keyGetEncryptionKeyHex: MetaGroupWrapper['keyGetEncryptionKeyHex'];
     public loadKeyMessage: MetaGroupWrapper['loadKeyMessage'];
     public keysAdmin: MetaGroupWrapper['keysAdmin'];
     public keyGetCurrentGen: MetaGroupWrapper['keyGetCurrentGen'];
+    public loadAdminKeys: MetaGroupWrapper['loadAdminKeys'];
     public encryptMessages: MetaGroupWrapper['encryptMessages'];
     public decryptMessage: MetaGroupWrapper['decryptMessage'];
     public makeSwarmSubAccount: MetaGroupWrapper['makeSwarmSubAccount'];
+    public swarmSubAccountToken: MetaGroupWrapper['swarmSubAccountToken'];
+    public swarmVerifySubAccount: MetaGroupWrapper['swarmVerifySubAccount'];
+    public generateSupplementKeys: MetaGroupWrapper['generateSupplementKeys'];
     public swarmSubaccountSign: MetaGroupWrapper['swarmSubaccountSign'];
   }
 

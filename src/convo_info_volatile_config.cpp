@@ -181,14 +181,18 @@ void ConvoInfoVolatileWrapper::set1o1(const Napi::CallbackInfo& info) {
             convo.last_read = parsed.lastReadTsMs;
         convo.unread = parsed.forcedUnread;
 
-        // 1o1 also have a pro gen index hash & pro expiry
+        // 1o1 also have a pro gen index hash & pro expiry. Both are
+        // optional: an omitted (undefined) property is treated as
+        // "no change". null is reserved for an explicit reset.
         auto proGenIndexHashB64Js = parsed.obj.Get("proGenIndexHashB64");
-        assertIsStringOrNull(proGenIndexHashB64Js, fnName + "proGenIndexHashB64Js");
+        if (!proGenIndexHashB64Js.IsUndefined())
+            assertIsStringOrNull(proGenIndexHashB64Js, fnName + "proGenIndexHashB64Js");
         auto proGenIndexHashB64Cpp =
                 maybeNonemptyString(proGenIndexHashB64Js, fnName + "proGenIndexHashB64Cpp");
 
         auto proExpiryUnixTsMsJs = parsed.obj.Get("proExpiryTsMs");
-        assertIsNumberOrNull(proExpiryUnixTsMsJs, fnName + "proExpiryUnixTsMsJs");
+        if (!proExpiryUnixTsMsJs.IsUndefined())
+            assertIsNumberOrNull(proExpiryUnixTsMsJs, fnName + "proExpiryUnixTsMsJs");
         auto proExpiryUnixTsMsCpp =
                 maybeNonemptyInt(proExpiryUnixTsMsJs, fnName + "proExpiryUnixTsMsCpp");
         // Note: null is used to ignore an update. i.e. if the field is unset, we do not want to

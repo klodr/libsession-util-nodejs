@@ -611,7 +611,7 @@ Napi::Value MultiEncryptWrapper::decryptForCommunity(const Napi::CallbackInfo& i
         if (first.IsEmpty())
             throw std::invalid_argument("decryptForCommunity first received empty");
 
-        auto second = info[1].As<Napi::Array>();
+        auto second = info[1].As<Napi::Object>();
 
         if (second.IsEmpty())
             throw std::invalid_argument("decryptForCommunity second received empty");

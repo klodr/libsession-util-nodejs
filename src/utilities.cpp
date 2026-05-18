@@ -5,6 +5,7 @@
 #include <oxenc/hex.h>
 
 #include <chrono>
+#include <cmath>
 
 #include "session/config/namespaces.hpp"
 #include "session/config/profile_pic.hpp"
@@ -17,7 +18,7 @@ void assertInfoLength(const Napi::CallbackInfo& info, const int expected) {
 }
 
 void assertInfoMinLength(const Napi::CallbackInfo& info, const int minLength) {
-    checkOrThrow(info.Length() < minLength, "Invalid number of min length arguments");
+    checkOrThrow(info.Length() >= minLength, "Invalid number of min length arguments");
 }
 
 void assertIsStringOrNull(const Napi::Value& val, const std::string& identifier) {
@@ -145,6 +146,15 @@ int64_t toCppInteger(Napi::Value x, const std::string& identifier, bool allowUnd
         return x.As<Napi::Number>().Int64Value();
 
     throw std::invalid_argument{"Unsupported type for "s + identifier + ": expected a number"};
+}
+
+uint8_t toCppUint8Strict(Napi::Value x, const std::string& identifier) {
+    assertIsNumber(x, identifier);
+    const double d = x.As<Napi::Number>().DoubleValue();
+    if (!std::isfinite(d) || std::floor(d) != d || d < 0.0 || d > 255.0)
+        throw std::invalid_argument{
+                identifier + ": expected integer in [0, 255], got " + std::to_string(d)};
+    return static_cast<uint8_t>(d);
 }
 
 int64_t toCppIntegerB(Napi::Value x, const std::string& identifier, bool allowUndefined) {
@@ -447,16 +457,8 @@ Napi::BigInt proMessageBitsetToJS(const Napi::Env& env, const ProMessageBitset b
     return Napi::BigInt::New(env, bitset.data);
 }
 
-std::span<const uint8_t> from_hex_to_span(std::string_view x) {
-    return session::to_span(oxenc::from_hex(x));
-}
-
 std::vector<unsigned char> from_hex_to_vector(std::string_view x) {
     return session::to_vector(oxenc::from_hex(x));
-}
-
-std::span<const uint8_t> from_base64_to_span(std::string_view x) {
-    return session::to_span(oxenc::from_base64(x));
 }
 
 std::vector<unsigned char> from_base64_to_vector(std::string_view x) {

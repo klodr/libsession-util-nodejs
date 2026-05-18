@@ -11,7 +11,7 @@ declare module '@klodr/libsession-util-nodejs' {
 
   type ConvoVolatile1o1GetExtra = {
     pubkeyHex: string;
-  } & { proExpiryTsMs: number | null; genIndexHashB64: string | null };
+  } & { proExpiryTsMs: number | null; proGenIndexHashB64: string | null };
 
   type ConvoVolatile1o1SetExtra = {
     /**
@@ -72,13 +72,19 @@ declare module '@klodr/libsession-util-nodejs' {
     public get1o1: ConvoInfoVolatileWrapper['get1o1'];
     public getAll1o1: ConvoInfoVolatileWrapper['getAll1o1'];
     public set1o1: ConvoInfoVolatileWrapper['set1o1'];
-    public erase1o1: ConvoInfoVolatileWrapper['eraseLegacyGroup'];
+    public erase1o1: ConvoInfoVolatileWrapper['erase1o1'];
 
     // legacy-groups related methods
     public getLegacyGroup: ConvoInfoVolatileWrapper['getLegacyGroup'];
     public getAllLegacyGroups: ConvoInfoVolatileWrapper['getAllLegacyGroups'];
     public setLegacyGroup: ConvoInfoVolatileWrapper['setLegacyGroup'];
     public eraseLegacyGroup: ConvoInfoVolatileWrapper['eraseLegacyGroup'];
+
+    // groups related methods
+    public getGroup: ConvoInfoVolatileWrapper['getGroup'];
+    public getAllGroups: ConvoInfoVolatileWrapper['getAllGroups'];
+    public setGroup: ConvoInfoVolatileWrapper['setGroup'];
+    public eraseGroup: ConvoInfoVolatileWrapper['eraseGroup'];
 
     // communities related methods
     public getCommunity: ConvoInfoVolatileWrapper['getCommunity'];

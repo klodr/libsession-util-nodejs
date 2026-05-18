@@ -49,14 +49,21 @@ class ConfigBaseImpl {
             if (prop.utf8name)
                 seen.emplace(prop.utf8name);
 
-        properties.push_back(T::InstanceMethod("needsDump", &T::needsDump));
-        properties.push_back(T::InstanceMethod("needsPush", &T::needsPush));
-        properties.push_back(T::InstanceMethod("activeHashes", &T::activeHashes));
-        properties.push_back(T::InstanceMethod("push", &T::push));
-        properties.push_back(T::InstanceMethod("dump", &T::dump));
-        properties.push_back(T::InstanceMethod("makeDump", &T::makeDump));
-        properties.push_back(T::InstanceMethod("confirmPushed", &T::confirmPushed));
-        properties.push_back(T::InstanceMethod("merge", &T::merge));
+        // Skip base methods that a subtype has already redefined to avoid
+        // duplicate property registration.
+        auto add_if_missing = [&](const char* name, auto method) {
+            if (seen.emplace(name).second)
+                properties.push_back(T::InstanceMethod(name, method));
+        };
+
+        add_if_missing("needsDump", &T::needsDump);
+        add_if_missing("needsPush", &T::needsPush);
+        add_if_missing("activeHashes", &T::activeHashes);
+        add_if_missing("push", &T::push);
+        add_if_missing("dump", &T::dump);
+        add_if_missing("makeDump", &T::makeDump);
+        add_if_missing("confirmPushed", &T::confirmPushed);
+        add_if_missing("merge", &T::merge);
 
         return properties;
     }

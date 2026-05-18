@@ -11,7 +11,7 @@ find_package(Git)
 set(GIT_COMMIT "unknown") # Default value for when Git is not found
 if (EXISTS "${CMAKE_SOURCE_DIR}/.git/index" AND GIT_FOUND)
     execute_process(COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD RESULT_VARIABLE GIT_GET_HASH_RESULT OUTPUT_VARIABLE GIT_COMMIT OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if(GIT_GET_HASH_RESULT)
+    if(GIT_GET_HASH_RESULT EQUAL 0)
         message(STATUS "You are currently on commit ${GIT_COMMIT}")
     else()
         message(WARNING "Cannot determine current commit. Make sure that you are building either from a Git working tree or from a source archive.")
@@ -36,7 +36,7 @@ ProcessorCount(N)
 if(NOT N EQUAL 0)
   set(CMAKE_BUILD_PARALLEL_LEVEL ${N})
 else()
-  set(CMAKE_BUILD_PARALLEL_LEVEL 4)  # Fallback to 16 if detection fails
+  set(CMAKE_BUILD_PARALLEL_LEVEL 4)  # Fallback to 4 if detection fails
 endif()
 message(STATUS "Number of processors detected: ${N}")
 

@@ -348,39 +348,33 @@ Napi::Value UserGroupsWrapper::setGroup(const Napi::CallbackInfo& info) {
 Napi::Value UserGroupsWrapper::markGroupKicked(const Napi::CallbackInfo& info) {
     return wrapResult(info, [&] {
         auto groupPk = getStringArgs<1>(info);
-
-        auto group = config.get_group(groupPk);
-        if (group) {
-            group->mark_kicked();
-            config.set(*group);
-        }
-        return config.get_or_construct_group(groupPk);
+        // Apply the marker even for groups we haven't seen yet, otherwise
+        // the state change is silently dropped and the constructed default
+        // is returned to the caller without the requested flag.
+        auto group = config.get_group(groupPk).value_or(config.get_or_construct_group(groupPk));
+        group.mark_kicked();
+        config.set(group);
+        return group;
     });
 }
 
 Napi::Value UserGroupsWrapper::markGroupInvited(const Napi::CallbackInfo& info) {
     return wrapResult(info, [&] {
         auto groupPk = getStringArgs<1>(info);
-
-        auto group = config.get_group(groupPk);
-        if (group) {
-            group->mark_invited();
-            config.set(*group);
-        }
-        return config.get_or_construct_group(groupPk);
+        auto group = config.get_group(groupPk).value_or(config.get_or_construct_group(groupPk));
+        group.mark_invited();
+        config.set(group);
+        return group;
     });
 }
 
 Napi::Value UserGroupsWrapper::markGroupDestroyed(const Napi::CallbackInfo& info) {
     return wrapResult(info, [&] {
         auto groupPk = getStringArgs<1>(info);
-
-        auto group = config.get_group(groupPk);
-        if (group) {
-            group->mark_destroyed();
-            config.set(*group);
-        }
-        return config.get_or_construct_group(groupPk);
+        auto group = config.get_group(groupPk).value_or(config.get_or_construct_group(groupPk));
+        group.mark_destroyed();
+        config.set(group);
+        return group;
     });
 }
 

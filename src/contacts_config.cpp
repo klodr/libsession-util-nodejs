@@ -28,11 +28,15 @@ inline constexpr std::string_view expiration_mode_string(expiration_mode mode) {
 }
 
 inline constexpr expiration_mode expiration_mode_from_string(std::string_view mode) {
+    if (mode == "off"sv)
+        return expiration_mode::none;
     if (mode == "deleteAfterRead"sv)
         return expiration_mode::after_read;
     if (mode == "deleteAfterSend"sv)
         return expiration_mode::after_send;
-    return expiration_mode::none;
+    // Reject typos / unknown values rather than silently disabling
+    // disappearing-message behaviour.
+    throw std::invalid_argument{"Invalid expirationMode"};
 }
 
 template <>

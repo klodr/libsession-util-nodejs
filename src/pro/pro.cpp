@@ -2,7 +2,7 @@
 
 namespace session::nodeapi {
 
-std::string_view ProBackendEnumToString(SESSION_PRO_BACKEND_PAYMENT_PROVIDER v) {
+std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_PAYMENT_PROVIDER v) {
     switch (v) {
         case SESSION_PRO_BACKEND_PAYMENT_PROVIDER_NIL: return "NIL";
         case SESSION_PRO_BACKEND_PAYMENT_PROVIDER_GOOGLE_PLAY_STORE: return "GOOGLE_PLAY_STORE";
@@ -14,7 +14,7 @@ std::string_view ProBackendEnumToString(SESSION_PRO_BACKEND_PAYMENT_PROVIDER v) 
     UNREACHABLE();
 }
 
-std::string_view ProBackendEnumToString(SESSION_PRO_BACKEND_PAYMENT_STATUS v) {
+std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_PAYMENT_STATUS v) {
     switch (v) {
         case SESSION_PRO_BACKEND_PAYMENT_STATUS_NIL: return "NIL";
         case SESSION_PRO_BACKEND_PAYMENT_STATUS_UNREDEEMED: return "UNREDEEMED";
@@ -50,7 +50,7 @@ std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_USER_PRO_STATUS v) {
     UNREACHABLE();
 }
 
-std::string_view ProBackendEnumToString(SESSION_PRO_BACKEND_GET_PRO_DETAILS_ERROR_REPORT v) {
+std::string_view proBackendEnumToString(SESSION_PRO_BACKEND_GET_PRO_DETAILS_ERROR_REPORT v) {
     switch (v) {
         case SESSION_PRO_BACKEND_GET_PRO_DETAILS_ERROR_REPORT_SUCCESS: return "SUCCESS";
         case SESSION_PRO_BACKEND_GET_PRO_DETAILS_ERROR_REPORT_GENERIC_ERROR: return "GENERIC_ERROR";

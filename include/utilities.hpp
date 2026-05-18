@@ -77,6 +77,13 @@ std::vector<unsigned char> toCppBuffer(Napi::Value x, const std::string& identif
 int64_t toCppInteger(Napi::Value x, const std::string& identifier, bool allowUndefined = false);
 
 /**
+ * Convert a JS number to uint8 with strict range/integer checks. Rejects
+ * non-finite values, non-integers, negatives, and anything > 255 — none of
+ * which a bare `static_cast<uint8_t>(napiNumber.Int32Value())` catches.
+ */
+uint8_t toCppUint8Strict(Napi::Value x, const std::string& identifier);
+
+/**
  * Same as toCppInteger, but for BigInt
  */
 int64_t toCppIntegerB(Napi::Value x, const std::string& identifier, bool allowUndefined = false);
@@ -304,6 +311,13 @@ struct toJs_impl<config::profile_pic> {
     }
 };
 
+// Forward-declare wrapResult so the template below resolves it cleanly at
+// instantiation. Without this, two-phase name lookup in a stricter compiler
+// would fail on the call below since wrapResult is defined later in this
+// header.
+template <typename Call>
+auto wrapResult(const Napi::Env& env, Call&& call);
+
 // Helper for various "get_all" functions that copy [it...end) into a Napi::Array via toJs().
 // Throws a Napi::Error on any exception.
 template <typename It, typename EndIt>
@@ -424,8 +438,6 @@ Napi::BigInt proProfileBitsetToJS(const Napi::Env& env, const ProProfileBitset b
 
 Napi::BigInt proMessageBitsetToJS(const Napi::Env& env, const ProMessageBitset bitset);
 
-std::span<const uint8_t> from_hex_to_span(std::string_view x);
-
 template <std::size_t N>
 std::array<uint8_t, N> spanToArray(std::span<const unsigned char> span);
 
@@ -461,13 +473,14 @@ std::array<uint8_t, N> from_base64_to_array(std::string x) {
 
 std::vector<unsigned char> from_hex_to_vector(std::string_view x);
 
-std::span<const uint8_t> from_base64_to_span(std::string_view x);
 std::vector<unsigned char> from_base64_to_vector(std::string_view x);
 
 // Concept to match containers with a size() method
 template <typename T>
 concept HasSize = requires(T t) {
-    { t.size() } -> std::convertible_to<size_t>;
+    {
+        t.size()
+    } -> std::convertible_to<size_t>;
 };
 
 template <HasSize T>
