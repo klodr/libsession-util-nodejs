@@ -6,17 +6,24 @@ name: cpp-tests
 # is the most thorough validation of the C++ surface the binding wraps.
 # This workflow opts in: build with WITH_TESTS=ON and run `testAll`.
 #
-# Triggered manually (workflow_dispatch) or weekly so we have a recent
-# signal without slowing down PR cycles. A regression here means a
-# binding update broke something the upstream consensus considered
-# correct — which is exactly the kind of bug a JS-only test surface
-# would not catch.
+# Triggered manually (workflow_dispatch). The weekly schedule was removed
+# because the upstream `testAll` target pulls in
+# `test_backend_session_file_server.cpp`, which `#include`s `oxen/quic.hpp`
+# from the `oxen-libquic` submodule. That header is only available when
+# `ENABLE_NETWORKING=ON`, but `test:cpp` deliberately builds with
+# `--CDENABLE_NETWORKING=OFF` to match the consumer install surface.
+# The scheduled run was therefore structurally guaranteed to fail.
+#
+# A regression here means a binding update broke something the upstream
+# consensus considered correct — which is exactly the kind of bug a
+# JS-only test surface would not catch. To opt back into a recurring
+# signal, either (a) flip `test:cpp` to ENABLE_NETWORKING=ON for the
+# test job (and accept the libquic build cost, ~30 min on CI), or
+# (b) filter the suite to skip networking-dependent tests. Until then,
+# invoke this workflow manually when you want a fresh C++ check.
 
 on:
   workflow_dispatch:
-  schedule:
-    # Sundays 04:00 UTC.
-    - cron: '0 4 * * 0'
 
 permissions:
   contents: read
