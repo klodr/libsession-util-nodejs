@@ -40,14 +40,14 @@ workflow, anchored in the Sigstore transparency log). That work is:
 - Requires a verifier in every consumer install path
 
 It is not blocking any current consumer because the only one
-(`klodr/session-messenger`) carries its own in-repo SHA256 digests
+(a private application) carries its own in-repo SHA256 digests
 since v2.0.4 (cf. `scripts/install-binding.mjs`). Those digests are
 signed-in-git on the consumer side, so an attacker has to compromise
 TWO repos to corrupt the install.
 
 ### Mitigation in place
 
-- `klodr/session-messenger` v2.0.4 + later: `scripts/install-binding.mjs`
+- The private consumer, v2.0.4 + later: `scripts/install-binding.mjs`
   hardcodes the SHA256 for the binding version pinned in its
   `package.json`. Tampered release assets fail the consumer-side
   verification.
@@ -95,7 +95,7 @@ The clean fix is per-env storage via `napi_set_instance_data` + a
 small struct (TSFN + mutex + sink_id) per env, and capturing the
 instance data inside `session::add_logger`'s callback rather than the
 global. Estimated ~80 LOC C++ + Worker-based regression tests. The
-current consumer (`klodr/session-messenger`) runs a single N-API
+current consumer (a private application) runs a single N-API
 environment on a single thread — the race is unreachable in practice.
 
 ### Mitigation in place
