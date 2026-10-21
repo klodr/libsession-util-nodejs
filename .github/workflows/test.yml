@@ -103,7 +103,7 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          # See docs/V2_PHASE1_FORK.md R14 in klodr/session-messenger.
+          # See docs/V2_PHASE1_FORK.md R14 in the private consumer repo.
           # Flipping ENABLE_NETWORKING to ON would re-activate the
           # build_external() path that downloads from oxen.rocks/deps
           # for gmp/openssl/etc — a supply-chain surface this fork

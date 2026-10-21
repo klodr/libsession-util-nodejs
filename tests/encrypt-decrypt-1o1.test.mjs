@@ -3,7 +3,7 @@
  *
  * Why this exists: until now the fork shipped zero JS test surface and
  * the upstream Catch2 suite is force-disabled at install
- * (`-DWITH_TESTS=OFF`). The session-messenger consumer found a TS-vs-C++
+ * (`-DWITH_TESTS=OFF`). The private consumer app found a TS-vs-C++
  * shape mismatch on `decodedEnvelope` only after hours of debugging a
  * round-trip that returned 0 envelopes — exactly the kind of bug a
  * round-trip test in the binding's own repo would have caught in
@@ -185,9 +185,9 @@ describe('decryptFor1o1 — return shape contract', () => {
     // Build a session id from the ed25519 pubkey via X25519 birational
     // map. Since we don't have @noble/curves here, this part of the
     // test is skipped — the surface tests above already pin the
-    // wrong-length contract. The full round-trip test lives in
-    // session-messenger/tests/encrypt-decrypt-roundtrip.test.ts which
-    // pulls @noble/curves transitively via @scure/base.
+    // wrong-length contract. The full round-trip test lives in the
+    // private consumer app (tests/encrypt-decrypt-roundtrip.test.ts),
+    // which pulls @noble/curves transitively via @scure/base.
     expect(ed.publicKey).toBeInstanceOf(Uint8Array)
     expect(ed.publicKey.byteLength).toBe(32)
   })
